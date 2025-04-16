@@ -1,12 +1,12 @@
-import { MongoClient, type Db } from "mongodb";
-
-const weights = [{ workoutName: "Lat Pulldown", weight: 30 }];
+import { getCollection } from "../db";
 
 export async function GET() {
-  const client = await MongoClient.connect(
-    "mongodb+srv://samyak07:NGosusrYBmNPqnKK@cluster0.ps09ugr.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-  );
-  const db = client.db();
-  db.collection('weights')
+  const weights = [];
+  const collection = await getCollection("weights");
+  const cursor = collection.find();
+
+  for await (const weight of cursor) {
+    weights.push(weight);
+  }
   return Response.json({ weights });
 }
