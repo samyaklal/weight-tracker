@@ -1,19 +1,28 @@
-import { Schema, model, InferSchemaType } from "mongoose";
+import {
+  Schema,
+  model,
+  InferSchemaType,
+  HydratedDocumentFromSchema,
+} from "mongoose";
 const workoutSchema = new Schema({
-    name: {
-        type: String,
-        required: true,
-    },
-    weight: Number,
-    sets: {
-        type: Number,
-        required: true,
-    },
-    reps: {
-        type: Number,
-        required: true,
-    },
+  name: {
+    type: String,
+    required: true,
+  },
+  weight: {
+    type: Number,
+    required: true,
+  },
+  sets: {
+    type: Number,
+    required: true,
+  },
+  reps: {
+    type: Number,
+    required: true,
+  },
 });
 
 export type WorkoutType = InferSchemaType<typeof workoutSchema>;
-export const Workout = model('Workout', workoutSchema);
+export type WorkoutSchema = HydratedDocumentFromSchema<typeof workoutSchema>;
+export const Workout = model("Workout", workoutSchema);
