@@ -4,6 +4,7 @@ import {
   InferSchemaType,
   HydratedDocumentFromSchema,
 } from "mongoose";
+
 const workoutSchema = new Schema({
   name: {
     type: String,

@@ -13,25 +13,70 @@ import {
   ModalHeader,
   Label,
   TextInput,
+  Toast,
+  ToastToggle,
 } from "flowbite-react";
-import { WorkoutType, WorkoutSchema } from "./api/workouts/db";
-import { ModalType } from "./enums";
+import { Types } from "mongoose";
+
+import { WorkoutSchema, WorkoutType } from "./api/workouts/db";
+import { ModalType, ToastType } from "./enums";
 
 const initialValue = { name: "", sets: 0, reps: 0, weight: 0 };
-const { Add, Update } = ModalType;
+const { Add, Update, Delete } = ModalType;
+const { Success, Error } = ToastType;
 
-export default function App({ workoutList }: { workoutList: WorkoutSchema[] }) {
+export default function App({ initialList }: { initialList: WorkoutSchema[] }) {
   const [selectedWorkout, setSelectedWorkout] = useState<WorkoutType>();
   const [showModal, setShowModal] = useState<ModalType>();
+  const [workoutList, setWorkoutList] = useState(initialList);
+  const [workoutId, setWorkoutId] = useState<Types.ObjectId>();
+
+  const [toastProps, setToastProps] = useState<{
+    color: ToastType;
+    message: string;
+  }>();
 
   function closeUpdateMdoal() {
     setShowModal(undefined);
     setSelectedWorkout(initialValue);
+    setWorkoutId(undefined);
   }
 
-  const workoutEls = workoutList.map(({ name, sets, reps, weight }) => {
+  async function handleChange() {
+    const response = await fetch(`/api/workouts/${workoutId || ""}`, {
+      method: workoutId ? "PATCH" : "POST",
+      body: JSON.stringify(selectedWorkout),
+    });
+
+    if (response.ok) {
+      setWorkoutList(await response.json());
+      setToastProps({ color: Success, message: `${showModal} successful` });
+      closeUpdateMdoal();
+    } else {
+      setToastProps({ color: Error, message: response.statusText });
+    }
+    setTimeout(() => setToastProps(undefined), 3000);
+  }
+
+  async function handleDelete() {
+    const response = await fetch(`/api/workouts/${workoutId}`, {
+      method: "DELETE",
+    });
+
+    if (response.ok) {
+      setWorkoutList(await response.json());
+      setToastProps({ color: Success, message: "Delete successful" });
+      closeUpdateMdoal();
+    } else {
+      setToastProps({ color: Error, message: response.statusText });
+    }
+    setTimeout(() => setToastProps(undefined), 3000);
+  }
+
+  const workoutEls = workoutList.map(({ name, sets, reps, weight, _id }) => {
     function showUpdateMdoal() {
       setSelectedWorkout({ name, sets, reps, weight });
+      setWorkoutId(_id);
       setShowModal(Update);
     }
 
@@ -80,84 +125,122 @@ export default function App({ workoutList }: { workoutList: WorkoutSchema[] }) {
         >
           <ModalHeader />
           <ModalBody>
-            <div className="space-y-6">
-              <h3 className="text-xl font-medium text-gray-900 dark:text-white">
-                {showModal} Workout
-              </h3>
-              <div>
-                <div className="mb-2 block">
-                  <Label htmlFor="name">Name</Label>
+            {showModal === Delete ? (
+              <div className="text-center">
+                <h3 className="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
+                  Are you sure you want to delete this workout?
+                </h3>
+                <div className="flex justify-center gap-4">
+                  <Button color="red" onClick={handleDelete}>
+                    Yes
+                  </Button>
+                  <Button
+                    color="alternative"
+                    onClick={() => setShowModal(Update)}
+                  >
+                    No
+                  </Button>
                 </div>
-                <TextInput
-                  id="name"
-                  placeholder="Enter workout name"
-                  value={name}
-                  onChange={(event) =>
-                    setSelectedWorkout((state) => ({
-                      ...(state as WorkoutType),
-                      name: event.target.value,
-                    }))
-                  }
-                  required
-                />
               </div>
-              <div>
-                <div className="mb-2 block">
-                  <Label htmlFor="sets">Sets</Label>
+            ) : (
+              <div className="space-y-6">
+                <h3 className="text-xl font-medium text-gray-900 dark:text-white">
+                  {showModal} Workout
+                </h3>
+                <div>
+                  <div className="mb-2 block">
+                    <Label htmlFor="name">Name</Label>
+                  </div>
+                  <TextInput
+                    id="name"
+                    placeholder="Enter workout name"
+                    value={name}
+                    onChange={(event) =>
+                      setSelectedWorkout((state) => ({
+                        ...(state as WorkoutType),
+                        name: event.target.value,
+                      }))
+                    }
+                    required
+                  />
                 </div>
-                <TextInput
-                  id="sets"
-                  type="number"
-                  value={sets}
-                  onChange={(event) =>
-                    setSelectedWorkout((state) => ({
-                      ...(state as WorkoutType),
-                      sets: Number(event.target.value),
-                    }))
-                  }
-                  required
-                />
-              </div>
-              <div>
-                <div className="mb-2 block">
-                  <Label htmlFor="sets">Reps</Label>
+                <div>
+                  <div className="mb-2 block">
+                    <Label htmlFor="sets">Sets</Label>
+                  </div>
+                  <TextInput
+                    id="sets"
+                    type="number"
+                    value={sets}
+                    onChange={(event) =>
+                      setSelectedWorkout((state) => ({
+                        ...(state as WorkoutType),
+                        sets: Number(event.target.value),
+                      }))
+                    }
+                    required
+                  />
                 </div>
-                <TextInput
-                  id="reps"
-                  type="number"
-                  value={reps}
-                  onChange={(event) =>
-                    setSelectedWorkout((state) => ({
-                      ...(state as WorkoutType),
-                      reps: Number(event.target.value),
-                    }))
-                  }
-                  required
-                />
-              </div>
-              <div>
-                <div className="mb-2 block">
-                  <Label htmlFor="sets">Weight</Label>
+                <div>
+                  <div className="mb-2 block">
+                    <Label htmlFor="sets">Reps</Label>
+                  </div>
+                  <TextInput
+                    id="reps"
+                    type="number"
+                    value={reps}
+                    onChange={(event) =>
+                      setSelectedWorkout((state) => ({
+                        ...(state as WorkoutType),
+                        reps: Number(event.target.value),
+                      }))
+                    }
+                    required
+                  />
                 </div>
-                <TextInput
-                  id="weight"
-                  type="number"
-                  value={weight}
-                  onChange={(event) =>
-                    setSelectedWorkout((state) => ({
-                      ...(state as WorkoutType),
-                      weight: Number(event.target.value),
-                    }))
-                  }
-                  required
-                />
+                <div>
+                  <div className="mb-2 block">
+                    <Label htmlFor="sets">Weight</Label>
+                  </div>
+                  <TextInput
+                    id="weight"
+                    type="number"
+                    value={weight}
+                    onChange={(event) =>
+                      setSelectedWorkout((state) => ({
+                        ...(state as WorkoutType),
+                        weight: Number(event.target.value),
+                      }))
+                    }
+                    required
+                  />
+                </div>
+                <div className="w-full flex justify-between">
+                  <Button
+                    disabled={!(name && sets && reps)}
+                    onClick={handleChange}
+                  >
+                    {showModal}
+                  </Button>
+                  {showModal === Update && (
+                    <Button color="red" onClick={() => setShowModal(Delete)}>
+                      {Delete}
+                    </Button>
+                  )}
+                </div>
               </div>
-              <div className="w-full">
-                <Button disabled={!(name && sets && reps)}>{showModal}</Button>
-              </div>
-            </div>
+            )}
           </ModalBody>
         </Modal>
+        {toastProps && (
+          <Toast className="fixed z-51 top-3 right-3">
+            <div
+              className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-cyan-100 text-cyan-500 dark:bg-cyan-800 dark:text-cyan-200${toastProps.color === Error ? " dark:bg-red-500" : ""}`}
+            ></div>
+            <div className="ml-3 text-sm font-normal">{toastProps.message}</div>
+            <ToastToggle />
+          </Toast>
+        )}
       </main>
     </>
   );
