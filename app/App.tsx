@@ -49,7 +49,8 @@ export default function App({ initialList }: { initialList: WorkoutSchema[] }) {
     });
 
     if (response.ok) {
-      setWorkoutList(await response.json());
+      const { workouts } = await response.json();
+      setWorkoutList(workouts);
       setToastProps({ color: Success, message: `${showModal} successful` });
       closeUpdateMdoal();
     } else {
@@ -64,7 +65,8 @@ export default function App({ initialList }: { initialList: WorkoutSchema[] }) {
     });
 
     if (response.ok) {
-      setWorkoutList(await response.json());
+      const { workouts } = await response.json();
+      setWorkoutList(workouts);
       setToastProps({ color: Success, message: "Delete successful" });
       closeUpdateMdoal();
     } else {

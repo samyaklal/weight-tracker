@@ -3,6 +3,7 @@ import {
   model,
   InferSchemaType,
   HydratedDocumentFromSchema,
+  models,
 } from "mongoose";
 
 const workoutSchema = new Schema({
@@ -26,4 +27,4 @@ const workoutSchema = new Schema({
 
 export type WorkoutType = InferSchemaType<typeof workoutSchema>;
 export type WorkoutSchema = HydratedDocumentFromSchema<typeof workoutSchema>;
-export const Workout = model("Workout", workoutSchema);
+export const Workout = models.Workout || model("Workout", workoutSchema);

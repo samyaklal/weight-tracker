@@ -7,9 +7,10 @@ export default async function Home() {
   const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
   const baseUrl = `${protocol}://${host}`;
   const response = await fetch(`${baseUrl}/api/workouts`);
+  const { workouts } = await response.json();
 
   if (response.ok) {
-    return <App initialList={await response.json()} />;
+    return <App initialList={workouts} />;
   } else {
     throw "Failed to load workouts";
   }
